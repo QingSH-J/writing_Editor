@@ -70,60 +70,60 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         }
     }
     return (
-        <div className="flex space-x-2 bg-gray-100 p-4 rounded-md shadow-md">
+        <div className="flex flex-wrap gap-1 bg-white p-4 rounded-md shadow-md">
             <button
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 disabled={!editor.can().chain().focus().toggleBold().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 text-sm bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-                Bold
+                B
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleItalic().run()}
                 disabled={!editor.can().chain().focus().toggleItalic().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 text-sm bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
-                Italic
+                I
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleStrike().run()}
                 disabled={!editor.can().chain().focus().toggleStrike().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 Strikethrough
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleCode().run()}
                 disabled={!editor.can().chain().focus().toggleCode().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 Code
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
                 disabled={!editor.can().chain().focus().toggleBlockquote().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 Blockquote
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 disabled={!editor.can().chain().focus().toggleBulletList().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-1 py-0.5 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 Bullet List
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 disabled={!editor.can().chain().focus().toggleOrderedList().run()}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-2 py-1 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 Ordered List
             </button>
             <select
                 value={currentFront}
                 onChange={handleFontChange}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="px-2 py-1 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <option value="">Default</option>
                 {availableFonts.map((font) => (
@@ -136,7 +136,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             <select 
                 value={currentSize}
                 onChange={handleFontSizeChange}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed" >
+                className="px-2 py-1 bg-white text-black rounded-md hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed" >
                 <option value="">Default</option>
                 {availableFontSizes.map((font) => (
                     <option key={font.value} value={font.value}>
