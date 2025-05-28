@@ -9,6 +9,9 @@ import Image from 'next/image';
 import { useState, useEffect, useRef } from 'react';
 import { TextAlign } from '@tiptap/extension-text-align';
 import Heading from '@tiptap/extension-heading';
+import History from '@tiptap/extension-history';
+import { getHierarchicalIndexes, TableOfContents } from '@tiptap-pro/extension-table-of-contents';
+import { TextSelect } from '@tiptap/pm/state';
 
 //generate a menu bar with buttons for bold, italic, underline, strikethrough, code, blockquote, bullet list, ordered list, and link
 const availableFonts = [
@@ -35,7 +38,7 @@ const availableFontSizes = [
     { name: 'Large (20px)', value: '20px' },
     { name: 'Extra Large (24px)', value: '24px' },
     { name: 'Huge (32px)', value: '32px' },
-    { name: '小四', value: '12px-xiaosi' }, // 修改为唯一值
+    { name: '小四', value: '12px' },
 
 ];
 
@@ -83,35 +86,22 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
     const handleFontSizeChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         const fontsize = event.target.value;
         if (fontsize) {
-            // 处理特殊情况 '12px-xiaosi'
-            const actualSize = fontsize === '12px-xiaosi' ? '12px' : fontsize;
-            editor.chain().focus().setFontSize(actualSize).run();
+            editor.chain().focus().setFontSize(fontsize).run();
         } else {
             editor.chain().focus().unsetFontSize().run();
         }
     };
     let currentSize = 'Default';
-    // 检查当前字体大小
     for(const font of availableFontSizes) {
-        // 对于 '12px-xiaosi'，需要特殊处理
-        const valueToCheck = font.value === '12px-xiaosi' ? '12px' : font.value;
-        if(editor.isActive('fontSize', valueToCheck)) {
-            currentSize = font.value; // 保存原始值，包括 '12px-xiaosi'
+        if(editor.isActive('fontSize', font.value)) {
+            currentSize = font.value;
             break;
         }
     }
-    if(!currentSize || currentSize === 'Default'){
+    if(!currentSize){
         const currentAttributes = editor.getAttributes('textStyle');
         if(currentAttributes.fontSize) {
-            // 如果当前字体大小是12px，检查是否应该显示为"小四"
-            if(currentAttributes.fontSize === '12px') {
-                // 这里可以添加额外的逻辑来确定是否应该显示为"小四"
-                // 例如，可以根据其他属性或上下文来决定
-                // 现在简单地保持为 '12px'
-                currentSize = currentAttributes.fontSize;
-            } else {
-                currentSize = currentAttributes.fontSize;
-            }
+            currentSize = currentAttributes.fontSize;
         }
     }
 
@@ -129,53 +119,53 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
         }
     }
     return (
-        <div className="flex flex-wrap gap-1 bg-white p-4 rounded-md shadow-md justify-center">
+        <div className="flex flex-wrap gap-1 bg-white p-4 rounded-md shadow-md">
             <button
                 onClick={() => editor.chain().focus().toggleBold().run()}
                 disabled={!editor.can().chain().focus().toggleBold().run()}
-                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/First/bold-svgrepo-com.svg" alt="Bold" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleItalic().run()}
                 disabled={!editor.can().chain().focus().toggleItalic().run()}
-                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/First/italic-svgrepo-com.svg" alt="Italic" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleStrike().run()}
                 disabled={!editor.can().chain().focus().toggleStrike().run()}
-                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-8 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/First/strikethrough-svgrepo-com.svg" alt="Strikethrough" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleCode().run()}
                 disabled={!editor.can().chain().focus().toggleCode().run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/code-svgrepo-com.svg" alt="Code" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleBlockquote().run()}
                 disabled={!editor.can().chain().focus().toggleBlockquote().run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/List/blockquote-svgrepo-com.svg" alt="Blockquote" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleBulletList().run()}
                 disabled={!editor.can().chain().focus().toggleBulletList().run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/List/bullet-list-svgrepo-com.svg" alt="Bullet List" width={16} height={16} />
             </button>
             <button
                 onClick={() => editor.chain().focus().toggleOrderedList().run()}
                 disabled={!editor.can().chain().focus().toggleOrderedList().run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/List/ordered-list-svgrepo-com.svg" alt="Ordered List" width={16} height={16} />
             </button>
@@ -183,7 +173,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             <button
                 onClick={() => editor.chain().focus().toggleTextAlign('left').run()}
                 disabled={!editor.can().chain().focus().toggleTextAlign('left').run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/Align/align-text-left-svgrepo-com.svg" alt="Left Align" width={16} height={16} />
             </button>
@@ -191,7 +181,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             <button
                 onClick={() => editor.chain().focus().toggleTextAlign('right').run()}
                 disabled={!editor.can().chain().focus().toggleTextAlign('right').run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/Align/align-text-right-svgrepo-com.svg" alt="Right Align" width={16} height={16} />
             </button>
@@ -199,7 +189,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             <button
                 onClick={() => editor.chain().focus().toggleTextAlign('center').run()}
                 disabled={!editor.can().chain().focus().toggleTextAlign('center').run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/Align/align-text-center-svgrepo-com.svg" alt="Center Align" width={16} height={16} />
             </button>
@@ -207,7 +197,7 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             <button
                 onClick={() => editor.chain().focus().toggleTextAlign('justify').run()}
                 disabled={!editor.can().chain().focus().toggleTextAlign('justify').run()}
-                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
                 <Image src="/Align/align-text-justify-svgrepo-com.svg" alt="Justify Align" width={16} height={16} />
             </button>
@@ -216,27 +206,44 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                 <div className="button-group flex gap-1">
                     <button
                         onClick={() => editor.chain().focus().setParagraph().run()}
-                        className={`w-14 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('paragraph') ? 'bg-gray-500 text-white' : ''}`}
+                        className={`w-14 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('paragraph') ? 'bg-gray-500 text-white' : ''}`}
                     >
                         <span className="font-normal">正文</span>
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-500 text-white' : ''}`}
+                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-500 text-white' : ''}`}
                     >
                         <span className="font-bold">H1</span>
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 text-white' : ''}`}
+                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 text-white' : ''}`}
                     >
                         <span className="font-bold">H2</span>
                     </button>
                     <button
                         onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 3 }) ? 'bg-gray-500 text-white' : ''}`}
+                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 3 }) ? 'bg-gray-500 text-white' : ''}`}
                     >
                         <span className="font-bold">H3</span>
+                    </button>
+                </div>
+            </div>
+
+            <div className="control-group">
+                <div className="button-group flex gap-1">
+                    <button
+                        onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}
+                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 text-white' : ''}`}
+                        >
+                        <Image src="/DO/undo-svgrepo-com.svg" alt="Undo" width={16} height={16}></Image>
+                    </button>
+                    <button
+                        onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}
+                        className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-500 text-white' : ''}`}
+                    >
+                        <Image src="/DO/redo-1-svgrepo-com.svg" alt="Redo" width={16} height={16}></Image>
                     </button>
                 </div>
             </div>
@@ -251,12 +258,14 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                         setIsFontDropdownOpen(false);
                         setIsFontSizeDropdownOpen(false);
                     }}
-                    className="w-10 h-8 flex items-center justify-center bg-white text-black rounded border border-gray-300 hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    className="w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
                     <div className="flex items-center">
                         <Image src="/Font/font-size-1-svgrepo-com.svg" alt="Font" width={16} height={16} />
                     </div>
-                    <span className="text-xs ml-1">▼</span>
+                    <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
                 </button>
 
                 {isMainDropdownOpen && (
@@ -273,7 +282,9 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                                     <Image src="/Font/font-family-svgrepo-com.svg" alt="Font" width={16} height={16} />
                                     <span>字体选择</span>
                                 </div>
-                                <span className="text-xs">▶</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </div>
 
                             {/* 字体下拉子菜单 */}
@@ -323,7 +334,9 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                                     <Image src="/Font/font-size-svgrepo-com1.svg" alt="Font Size" width={16} height={16} />
                                     <span>字号设置</span>
                                 </div>
-                                <span className="text-xs">▶</span>
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                                </svg>
                             </div>
 
                             {/* 字号下拉子菜单 */}
@@ -365,41 +378,101 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
 }
 
 const Tiptap = () => {
-    const editor = useEditor({
-        extensions: [
-            StarterKit,
-            TextStyle,
-            FontFamily.configure({
-                types: ['textStyle'],
-            }),
-            FontSize.configure({
-                types: ['textStyle'],
-            }),
-            TextAlign.configure({
-                types: ['heading', 'paragraph'],
-                alignments: ['left', 'center', 'right', 'justify'],
-                defaultAlignment: 'left',
-            }),
-            Heading.configure({
-                levels: [1, 2, 3],
-            })
+    // 使用useState存储初始内容
+    const [initialContent, setInitialContent] = useState('<p>Hello world!</p>');
+    // 添加一个状态标记是否已从localStorage加载内容
+    const [contentLoaded, setContentLoaded] = useState(false);
 
-        ],
-        content: '<p>Hello world!</p>',
-        onUpdate: ({ editor }) => {
-            console.log(editor.getHTML());
+    // 保存上一次的定时器ID
+    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+    // 在组件挂载时从localStorage获取内容
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const savedContent = localStorage.getItem('tiptap-content');
+            if (savedContent) {
+                console.log('从localStorage恢复内容:', savedContent);
+                setInitialContent(savedContent);
+            } else {
+                console.log('localStorage中没有保存的内容，使用默认内容');
+            }
+            // 标记内容已加载，无论是从localStorage还是使用默认内容
+            setContentLoaded(true);
+        }
+    }, []);
+
+    // 创建一个保存函数
+    const saveContentToLocalStorage = (content: string) => {
+        // 清除之前的定时器
+        if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+        }
+
+        // 设置新的定时器
+        timeoutRef.current = setTimeout(() => {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('tiptap-content', content);
+                console.log('内容已保存到localStorage:', content);
+            }
+        }, 500); // 500毫秒的延迟
+    };
+
+    // 添加调试日志
+    useEffect(() => {
+        console.log('当前初始内容状态:', {
+            initialContent,
+            contentLoaded
+        });
+    }, [initialContent, contentLoaded]);
+
+    // 只有在contentLoaded为true时才初始化编辑器
+    const editor = useEditor(
+        {
+            extensions: [
+                StarterKit,
+                TextStyle,
+                FontFamily.configure({
+                    types: ['textStyle'],
+                }),
+                FontSize.configure({
+                    types: ['textStyle'],
+                }),
+                TextAlign.configure({
+                    types: ['heading', 'paragraph'],
+                    alignments: ['left', 'center', 'right', 'justify'],
+                    defaultAlignment: 'left',
+                }),
+                Heading.configure({
+                    levels: [1, 2, 3],
+                })
+            ],
+            content: initialContent,
+            onUpdate: ({ editor }) => {
+                const content = editor.getHTML();
+                console.log('编辑器内容已更新:', content.substring(0, 50) + (content.length > 50 ? '...' : ''));
+                // 使用防抖函数保存内容到localStorage
+                saveContentToLocalStorage(content);
+            },
+            onCreate: ({ editor }) => {
+                console.log('编辑器已创建，当前内容:', editor.getHTML().substring(0, 50) + (editor.getHTML().length > 50 ? '...' : ''));
+            }
         },
-    })
+        // 添加依赖项，当contentLoaded或initialContent变化时重新初始化编辑器
+        [contentLoaded, initialContent]
+    );
 
-
+    // 添加编辑器状态变化的调试日志
+    useEffect(() => {
+        if (editor) {
+            console.log('编辑器状态已更新，当前内容:', editor.getHTML().substring(0, 50) + (editor.getHTML().length > 50 ? '...' : ''));
+        }
+    }, [editor]);
 
     return (
-        <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
-            <div className="w-full max-w-4xl bg-white p-4 rounded-md flex flex-col items-center">
-                <div className="w-full flex justify-center mb-4">
-                    <MenuBar editor={editor} />
-                </div>
-                <div className="border rounded-md flex-grow w-full">
+        <div className="flex justify-center min-h-screen bg-gray-100 p-4">
+            <div className="w-full max-w-4xl bg-white p-4 rounded-md flex flex-col">
+                <MenuBar editor={editor} />
+                <div className="border rounded-md flex-grow">
                     <div className="h-full">
                         <EditorContent editor={editor} className="w-full h-full" />
                     </div>

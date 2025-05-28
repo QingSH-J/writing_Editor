@@ -29,7 +29,7 @@ const CherryBlossom: React.FC<CherryBlossomProps> = ({ id, style, animationType 
   const getAnimationStyle = (type: number) => {
     const animations = {
       0: 'fall-straight 8s linear infinite',
-      1: 'fall-wave 10s ease-in-out infinite', 
+      1: 'fall-wave 10s ease-in-out infinite',
       2: 'fall-spiral 12s ease-in-out infinite'
     };
     return animations[type as keyof typeof animations] || animations[0];
@@ -48,7 +48,7 @@ const CherryBlossom: React.FC<CherryBlossomProps> = ({ id, style, animationType 
             opacity: 0;
           }
         }
-        
+
         @keyframes fall-wave {
           0% {
             transform: translateY(-100vh) rotate(0deg) translateX(0);
@@ -71,7 +71,7 @@ const CherryBlossom: React.FC<CherryBlossomProps> = ({ id, style, animationType 
             opacity: 0;
           }
         }
-        
+
         @keyframes fall-spiral {
           0% {
             transform: translateY(-100vh) rotate(0deg) translateX(0) scale(1);
@@ -164,9 +164,9 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
         zIndex: 10
       }}>
         {cherryBlossoms.map(blossom => (
-          <CherryBlossom 
-            key={blossom.id} 
-            id={blossom.id} 
+          <CherryBlossom
+            key={blossom.id}
+            id={blossom.id}
             style={blossom.style}
             animationType={blossom.animationType}
           />
@@ -250,7 +250,7 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
                 WebkitTextFillColor: 'transparent',
                 margin: 0
               }}>
-                樱花编辑器
+                诗雨编辑器
               </h1>
             </div>
             <div style={{
@@ -258,28 +258,28 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
               alignItems: 'center',
               gap: '1.5rem'
             }}>
-              <a href="#features" style={{
+              <a href="/homepage/features" style={{
                 color: '#6b7280',
                 textDecoration: 'none',
                 transition: 'color 0.3s'
-              }} onMouseOver={(e) => e.target.style.color = '#db2777'} onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              }} onMouseOver={(e) => (e.target as HTMLElement).style.color = '#db2777'} onMouseOut={(e) => (e.target as HTMLElement).style.color = '#6b7280'}>
                 功能
               </a>
-              <a href="#about" style={{
+              <a href="/homepage/about" style={{
                 color: '#6b7280',
                 textDecoration: 'none',
                 transition: 'color 0.3s'
-              }} onMouseOver={(e) => e.target.style.color = '#db2777'} onMouseOut={(e) => e.target.style.color = '#6b7280'}>
+              }} onMouseOver={(e) => (e.target as HTMLElement).style.color = '#db2777'} onMouseOut={(e) => (e.target as HTMLElement).style.color = '#6b7280'}>
                 关于
               </a>
-              <a href="#contact" style={{
+              <a href="/homepage/editor" style={{
                 color: '#6b7280',
                 textDecoration: 'none',
                 transition: 'color 0.3s'
-              }} onMouseOver={(e) => e.target.style.color = '#db2777'} onMouseOut={(e) => e.target.style.color = '#6b7280'}>
-                联系
+              }} onMouseOver={(e) => (e.target as HTMLElement).style.color = '#db2777'} onMouseOut={(e) => (e.target as HTMLElement).style.color = '#6b7280'}>
+                编辑器
               </a>
-              <button 
+              <button
                 onClick={onStartEditing}
                 style={{
                   background: 'linear-gradient(to right, #ec4899, #9333ea)',
@@ -292,12 +292,14 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
                   boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
                 }}
                 onMouseOver={(e) => {
-                  e.target.style.transform = 'scale(1.05)';
-                  e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
+                  const target = e.target as HTMLElement;
+                  target.style.transform = 'scale(1.05)';
+                  target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.2)';
                 }}
                 onMouseOut={(e) => {
-                  e.target.style.transform = 'scale(1)';
-                  e.target.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
+                  const target = e.target as HTMLElement;
+                  target.style.transform = 'scale(1)';
+                  target.style.boxShadow = '0 4px 6px rgba(0, 0, 0, 0.1)';
                 }}
               >
                 开始写作
@@ -333,7 +335,7 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
               }}>
                 绽放
               </span>
-              如樱
+              如诗
             </h2>
             <p style={{
               fontSize: '1.25rem',
@@ -354,7 +356,7 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
             marginBottom: '4rem',
             flexWrap: 'wrap'
           }}>
-            <button 
+            <button
               onClick={onStartEditing}
               style={{
                 background: 'linear-gradient(to right, #ec4899, #9333ea)',
@@ -372,12 +374,14 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
                 boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
               }}
               onMouseOver={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.2)';
+                const target = e.target as HTMLElement;
+                target.style.transform = 'scale(1.05)';
+                target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.2)';
               }}
               onMouseOut={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+                const target = e.target as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
               }}
             >
               <span>✏️</span>
@@ -400,12 +404,14 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
               boxShadow: '0 10px 25px rgba(0, 0, 0, 0.1)'
             }}
             onMouseOver={(e) => {
-              e.target.style.transform = 'scale(1.05)';
-              e.target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.2)';
+              const target = e.target as HTMLElement;
+              target.style.transform = 'scale(1.05)';
+              target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.2)';
             }}
             onMouseOut={(e) => {
-              e.target.style.transform = 'scale(1)';
-              e.target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
+              const target = e.target as HTMLElement;
+              target.style.transform = 'scale(1)';
+              target.style.boxShadow = '0 10px 25px rgba(0, 0, 0, 0.1)';
             }}>
               <span style={{ color: '#ec4899' }}>💖</span>
               <span>了解更多</span>
@@ -434,12 +440,14 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
                 cursor: 'pointer'
               }}
               onMouseOver={(e) => {
-                e.target.style.transform = 'scale(1.05)';
-                e.target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
+                const target = e.target as HTMLElement;
+                target.style.transform = 'scale(1.05)';
+                target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15)';
               }}
               onMouseOut={(e) => {
-                e.target.style.transform = 'scale(1)';
-                e.target.style.boxShadow = 'none';
+                const target = e.target as HTMLElement;
+                target.style.transform = 'scale(1)';
+                target.style.boxShadow = 'none';
               }}>
                 <div style={{
                   width: '4rem',
@@ -491,24 +499,81 @@ const CherryWebsite: React.FC<CherryWebsiteProps> = ({ onStartEditing }) => {
                 gap: '1.5rem',
                 marginBottom: '1.5rem'
               }}>
-                {['📱', '🐦', '💖'].map((icon, index) => (
-                  <a key={index} href="#" style={{
-                    color: '#6b7280',
-                    textDecoration: 'none',
-                    fontSize: '1.5rem',
-                    transition: 'color 0.3s'
-                  }}
-                  onMouseOver={(e) => e.target.style.color = '#db2777'}
-                  onMouseOut={(e) => e.target.style.color = '#6b7280'}>
-                    {icon}
-                  </a>
-                ))}
+                <a href="https://github.com/QingSH-J" target="_blank" rel="noopener noreferrer" style={{
+                  color: '#6b7280',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem'
+                }}
+                onMouseOver={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#db2777';
+                  target.style.transform = 'scale(1.1)';
+                }}
+                onMouseOut={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#6b7280';
+                  target.style.transform = 'scale(1)';
+                }}>
+                  <span>🐙</span>
+                  <span style={{ fontSize: '1rem' }}>GitHub</span>
+                </a>
+                <a href="#" style={{
+                  color: '#6b7280',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem'
+                }}
+                onMouseOver={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#db2777';
+                  target.style.transform = 'scale(1.1)';
+                }}
+                onMouseOut={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#6b7280';
+                  target.style.transform = 'scale(1)';
+                }}>
+                  <span>📱</span>
+                  <span style={{ fontSize: '1rem' }}>联系</span>
+                </a>
+                <a href="#" style={{
+                  color: '#6b7280',
+                  textDecoration: 'none',
+                  fontSize: '1.5rem',
+                  transition: 'all 0.3s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.5rem'
+                }}
+                onMouseOver={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#db2777';
+                  target.style.transform = 'scale(1.1)';
+                }}
+                onMouseOut={(e) => {
+                  const target = e.currentTarget as HTMLElement;
+                  target.style.color = '#6b7280';
+                  target.style.transform = 'scale(1)';
+                }}>
+                  <span>💖</span>
+                  <span style={{ fontSize: '1rem' }}>支持</span>
+                </a>
               </div>
               <p style={{
                 color: '#6b7280',
                 margin: 0
               }}>
-                © 2025 樱花编辑器. 让文字如花般绽放 🌸
+                © 2025 诗雨编辑器. 让文字如花般绽放 🌸
               </p>
             </div>
           </div>
