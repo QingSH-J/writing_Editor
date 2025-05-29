@@ -6,12 +6,24 @@ import { TextStyle } from '@tiptap/extension-text-style';
 import { FontFamily } from '@tiptap/extension-font-family';
 import { FontSize } from '@tiptap/extension-font-size';
 import Image from 'next/image';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { TextAlign } from '@tiptap/extension-text-align';
 import Heading from '@tiptap/extension-heading';
 import History from '@tiptap/extension-history';
-import { getHierarchicalIndexes, TableOfContents } from '@tiptap-pro/extension-table-of-contents';
-import { TextSelect } from '@tiptap/pm/state';
+import TableOfContents from './Toc';
+import CharacterCount from '@tiptap/extension-character-count';
+import { ExportDocx } from '@tiptap-pro/extension-export-docx'
+import Stream from 'node:stream';
+
+// 定义目录项接口
+interface ToCItem {
+  id: string;
+  textContent: string;
+  level: number;
+  isActive?: boolean;
+  isScrolledOver?: boolean;
+  pos: number;
+}
 
 //generate a menu bar with buttons for bold, italic, underline, strikethrough, code, blockquote, bullet list, ordered list, and link
 const availableFonts = [
@@ -38,17 +50,14 @@ const availableFontSizes = [
     { name: 'Large (20px)', value: '20px' },
     { name: 'Extra Large (24px)', value: '24px' },
     { name: 'Huge (32px)', value: '32px' },
-    { name: '小四', value: '12px' },
-
+    { name: '小四', value: '12px-xiaosi' } // 修改 value 为唯一值
 ];
 
 
-
-const MenuBar = ({ editor }: { editor: Editor | null }) => {
+const MenuBar = ({ editor, isLoading, onExportDocx }: { editor: Editor | null, isLoading: boolean, onExportDocx: () => void }) => {
     const [isFontDropdownOpen, setIsFontDropdownOpen] = useState(false);
     const [isMainDropdownOpen, setIsMainDropdownOpen] = useState(false);
     const [isFontSizeDropdownOpen, setIsFontSizeDropdownOpen] = useState(false);
-
     // 添加这些 ref 引用
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -118,6 +127,8 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
             currentFont = currentAttributes.fontFamily;
         }
     }
+
+        
     return (
         <div className="flex flex-wrap gap-1 bg-white p-4 rounded-md shadow-md">
             <button
@@ -373,6 +384,18 @@ const MenuBar = ({ editor }: { editor: Editor | null }) => {
                     </div>
                 )}
             </div>
+            <div className="w-full"></div>
+
+            <div>
+                <button 
+                    onClick={onExportDocx}
+                    disabled={isLoading}
+                    className={`w-10 h-8 flex items-center justify-center bg-white text-black rounded hover:bg-gray-500 active:scale-95 transition-transform duration-150 disabled:bg-gray-300 disabled:cursor-not-allowed ${isLoading ? 'opacity-50' : ''}`}
+                >
+                    <Image src="/Export/file-doc-svgrepo-com.svg" alt="Export to DOCX" width={16} height={16} />
+                    {isLoading && <span className="ml-2 animate-spin">⏳</span>}
+                </button>
+            </div>
         </div>
     )
 }
@@ -382,7 +405,14 @@ const Tiptap = () => {
     const [initialContent, setInitialContent] = useState('<p>Hello world!</p>');
     // 添加一个状态标记是否已从localStorage加载内容
     const [contentLoaded, setContentLoaded] = useState(false);
+    // 添加目录状态
+    const [tocItems, setTocItems] = useState<ToCItem[]>([]);
+    // 添加控制目录显示的状态
+    const [showToc, setShowToc] = useState(true);
+    // 添加字符统计状态
+    const [charCount, setCharCount] = useState({ characters: 0, words: 0, paragraphs: 0 });
 
+    const [isLoading, setIsLoading] = useState(false);
     // 保存上一次的定时器ID
     const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -425,6 +455,54 @@ const Tiptap = () => {
         });
     }, [initialContent, contentLoaded]);
 
+    // 提取文档标题的函数
+    const extractHeadings = useCallback((editor: Editor | null) => {
+        if (!editor) return [];
+        
+        const items: ToCItem[] = [];
+        const transaction = editor.state.tr;
+        
+        editor.state.doc.descendants((node, pos) => {
+            if (node.type.name === 'heading') {
+                const id = `heading-${items.length + 1}`;
+                const level = node.attrs.level;
+                const text = node.textContent;
+                
+                items.push({
+                    id,
+                    level,
+                    textContent: text || `标题 ${level}`,
+                    pos,
+                });
+            }
+            return true;
+        });
+        
+        return items;
+    }, []);
+
+    // 计算字符统计的函数
+    const countCharacters = useCallback((editor: Editor | null) => {
+        if (!editor) return { characters: 0, words: 0, paragraphs: 0 };
+        
+        const text = editor.getText();
+        const characters = text.length;
+        
+        // 计算单词数（根据空格和标点符号分割）
+        const words = text.trim().split(/\s+/).filter(word => word.length > 0).length;
+        
+        // 计算段落数（基于节点）
+        let paragraphs = 0;
+        editor.state.doc.descendants((node) => {
+            if (node.type.name === 'paragraph' && node.textContent.trim().length > 0) {
+                paragraphs++;
+            }
+            return true;
+        });
+        
+        return { characters, words, paragraphs };
+    }, []);
+
     // 只有在contentLoaded为true时才初始化编辑器
     const editor = useEditor(
         {
@@ -444,7 +522,25 @@ const Tiptap = () => {
                 }),
                 Heading.configure({
                     levels: [1, 2, 3],
-                })
+                }),
+                CharacterCount.configure({
+                    limit: 100000, // 设置字符限制
+                }),
+                ExportDocx.configure({
+                    onCompleteExport: (result: string | Blob | Stream | Buffer<ArrayBufferLike>) => {
+                      setIsLoading(false)
+                      const blob = new Blob([result as BlobPart], {
+                        type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                      })
+                      const url = URL.createObjectURL(blob)
+                      const a = document.createElement('a')
+            
+                      a.href = url
+                      a.download = 'export.docx'
+                      a.click()
+                      URL.revokeObjectURL(url)
+                    },
+                  }),
             ],
             content: initialContent,
             onUpdate: ({ editor }) => {
@@ -452,13 +548,27 @@ const Tiptap = () => {
                 console.log('编辑器内容已更新:', content.substring(0, 50) + (content.length > 50 ? '...' : ''));
                 // 使用防抖函数保存内容到localStorage
                 saveContentToLocalStorage(content);
+                // 更新目录
+                const headings = extractHeadings(editor);
+                setTocItems(headings);
+                
+                // 更新字符统计
+                const counts = countCharacters(editor);
+                setCharCount(counts);
             },
             onCreate: ({ editor }) => {
                 console.log('编辑器已创建，当前内容:', editor.getHTML().substring(0, 50) + (editor.getHTML().length > 50 ? '...' : ''));
+                // 初始化目录
+                const headings = extractHeadings(editor);
+                setTocItems(headings);
+                
+                // 初始化字符统计
+                const counts = countCharacters(editor);
+                setCharCount(counts);
             }
         },
         // 添加依赖项，当contentLoaded或initialContent变化时重新初始化编辑器
-        [contentLoaded, initialContent]
+        [contentLoaded, initialContent, extractHeadings]
     );
 
     // 添加编辑器状态变化的调试日志
@@ -468,13 +578,85 @@ const Tiptap = () => {
         }
     }, [editor]);
 
+    const handleExportDocx = useCallback(() => {
+        setIsLoading(true);
+        editor?.chain().exportDocx().run();
+    }, [editor]);
+
     return (
         <div className="flex justify-center min-h-screen bg-gray-100 p-4">
-            <div className="w-full max-w-4xl bg-white p-4 rounded-md flex flex-col">
-                <MenuBar editor={editor} />
-                <div className="border rounded-md flex-grow">
-                    <div className="h-full">
-                        <EditorContent editor={editor} className="w-full h-full" />
+            <div className="w-full max-w-6xl flex gap-6">
+                {/* 目录侧边栏 */}
+                {showToc && (
+                    <div className="w-72 shrink-0">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-lg font-semibold text-gray-700">目录</h3>
+                            <button 
+                                onClick={() => setShowToc(false)}
+                                className="text-gray-500 hover:text-gray-700"
+                                title="隐藏目录"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="sticky top-4">
+                            <TableOfContents editor={editor} items={tocItems} />
+                        </div>
+                    </div>
+                )}
+                
+                {/* 编辑器主体 */}
+                <div className={`${showToc ? 'flex-1' : 'w-full max-w-4xl mx-auto'} bg-white p-4 rounded-md flex flex-col`}>
+                    <div className="flex justify-between items-center mb-3">
+                        <MenuBar 
+                            editor={editor} 
+                            isLoading={isLoading}
+                            onExportDocx={handleExportDocx}
+                        />
+                        {!showToc && (
+                            <button 
+                                onClick={() => setShowToc(true)}
+                                className="ml-2 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md"
+                                title="显示目录"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+                                </svg>
+                            </button>
+                        )}
+                    </div>
+                    <div className="border rounded-md flex-grow p-4">
+                        <div className="h-full">
+                            <EditorContent editor={editor} className="w-full h-full prose max-w-none" />
+                        </div>
+                    </div>
+                    
+                    {/* 字符统计面板 */}
+                    <div className="mt-3 bg-gray-50 rounded-md border border-gray-200 p-3">
+                        <div className="flex flex-wrap justify-between items-center">
+                            <div className="flex items-center text-gray-600">
+                                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5h12M9 3v2m1 12h9M4 19h8m-8-4h2m8 0h2M4 9h2m8 0h6"></path>
+                                </svg>
+                                <span className="text-sm font-medium">字符统计</span>
+                            </div>
+                            <div className="flex flex-wrap gap-4 text-sm">
+                                <div className="flex items-center">
+                                    <span className="text-gray-500">字符数：</span>
+                                    <span className="font-medium text-gray-800">{charCount.characters}</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500">单词数：</span>
+                                    <span className="font-medium text-gray-800">{charCount.words}</span>
+                                </div>
+                                <div className="flex items-center">
+                                    <span className="text-gray-500">段落数：</span>
+                                    <span className="font-medium text-gray-800">{charCount.paragraphs}</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
